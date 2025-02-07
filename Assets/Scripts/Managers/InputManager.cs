@@ -10,7 +10,7 @@ namespace Managers
 
         #region Private Variables
         
-        private Vector3 _hitPosition;
+        private Ray _hitPosition;
         private bool _click;
 
         #endregion
@@ -22,16 +22,13 @@ namespace Managers
             if (Input.GetMouseButton(0))
             {
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                if (Physics.Raycast(ray, out RaycastHit hit))
-                {
-                    MousePosition(Input.mousePosition,hit.point);
-                }
+                MousePosition(ray);
             }
         }
 
-        private void MousePosition(Vector3 mousePosition , Vector3 hitPosition)
+        private void MousePosition(Ray ray)
         {
-            _hitPosition = hitPosition;
+            _hitPosition = ray;
             InputSignals.Instance.onInputParams?.Invoke(new InputParams()
             {
                 HitPosition = _hitPosition,
