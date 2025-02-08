@@ -19,7 +19,7 @@ namespace Managers
         
         private void Update()
         {
-            if (Input.GetMouseButton(0))
+            if (Input.GetMouseButtonDown(0))
             {
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 MousePosition(ray);

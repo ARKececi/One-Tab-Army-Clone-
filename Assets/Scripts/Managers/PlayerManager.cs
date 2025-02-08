@@ -16,6 +16,7 @@ namespace Managers
         [SerializeField] private float moveDuration = 0.3f; // Hareket süresi
         [SerializeField] private float scaleAmount = 1.5f; // Büyüme miktarı
         [SerializeField] private float activeTime = 0.5f; // İkonun görünme süresi
+        [SerializeField] private Collider _ticCollider;
         
         private Vector3 originalScale;
         
@@ -66,7 +67,8 @@ namespace Managers
                 {
                     iconPrefab.SetActive(true); // İkonu aç
                     iconPrefab.transform.position = hit.point; // Yeni pozisyona ışınla
-                
+                    _ticCollider.transform.position = hit.point;
+                    
                     // DoTween ile konumlandırma ve animasyon
                     iconPrefab.transform.DOKill();
                     iconPrefab.transform.localScale = originalScale;
@@ -80,6 +82,7 @@ namespace Managers
 
                     // Belirli bir süre sonra kapat
                     Invoke(nameof(HideIcon), activeTime);
+                    EnemySignals.Instance.onHitTarget?.Invoke(iconPrefab.transform);
                 }
             }
         }
