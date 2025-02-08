@@ -13,5 +13,11 @@ MonoBehaviour:
   m_Name: CD_Pool
   m_EditorClassIdentifier: 
   PoolDatas:
-    m_Keys: 
-    m_Values: []
+    m_Keys: 010000000200000003000000
+    m_Values:
+    - PoolObj: {fileID: 0}
+      PoolCount: 0
+    - PoolObj: {fileID: 0}
+      PoolCount: 0
+    - PoolObj: {fileID: 0}
+      PoolCount: 0

@@ -79,6 +79,15 @@ namespace Controllers.EnemyController
         private void Update()
         {
             _agent.destination = target.position;
+
+            if (target != transform)
+            {
+                // Hedefe doğru dönmek için karakterin yönünü ayarla
+                Vector3 direction = (target.position - transform.position).normalized;
+                Quaternion lookRotation = Quaternion.LookRotation(direction);
+                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 10f); // Yavaşça dönme
+            }
+            
             if (_agent.remainingDistance <= distanceStop && targetList.Count != 0)
             {
                 botAnimationController.Fight();

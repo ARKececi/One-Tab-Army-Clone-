@@ -13,9 +13,8 @@ MonoBehaviour:
   m_Name: CD_Enemy
   m_EditorClassIdentifier: 
   EnemyDatas:
-    m_Keys: 00000000
+    m_Keys: 04000000
     m_Values:
     - Healt: 100
       Damage: 10
       Speed: 2
-      FastSpeed: 0

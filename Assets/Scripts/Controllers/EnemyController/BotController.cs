@@ -20,20 +20,17 @@ namespace Controllers.EnemyController
         public int lwl;
         public string teamTag;
         public Slider Slider;
-        public EnemyData EnemyData;
+        [FormerlySerializedAs("EnemyData")] public BotData botData;
 
         #endregion
 
         #region Serialized Variables
 
-        [FormerlySerializedAs("enemyAIController")] [SerializeField] private BotAIController botAIController;
-        [FormerlySerializedAs("enemyAnimationController")] [SerializeField] private BotAnimationController botAnimationController;
-        [FormerlySerializedAs("enemyAtackController")] [SerializeField] private BotAtackController botAtackController;
+        [SerializeField] private BotAIController botAIController;
+        [SerializeField] private BotAnimationController botAnimationController;
         
-        [SerializeField] private GameObject moneyBag;
-        [SerializeField] private GameObject enemyPhysics;
         [SerializeField] private GameObject healtBar;
-        [FormerlySerializedAs("botEnum")] [FormerlySerializedAs("enemyEnum")] [SerializeField] private BotType botType;
+        [SerializeField] private BotType botType;
         [SerializeField] private List<BotManager> _enemyList;
         
         #endregion
@@ -55,10 +52,10 @@ namespace Controllers.EnemyController
 
         private void Awake()
         {
-            EnemyData = GetEnemyData();
-            _healt = EnemyData.Healt;
-            botAIController.OnSpeed(EnemyData.Speed);
-            damage = EnemyData.Damage;
+            botData = GetEnemyData();
+            _healt = botData.Healt;
+            botAIController.OnSpeed(botData.Speed);
+            damage = botData.Damage;
         }
 
         private void Update()
@@ -84,7 +81,7 @@ namespace Controllers.EnemyController
             botAIController.RemoveTarget(botManager.transform);
         }
 
-        private EnemyData GetEnemyData()
+        private BotData GetEnemyData()
         {
             return Resources.Load<CD_Bot>("Data/CD_Enemy").EnemyDatas[botType];
         }
@@ -102,10 +99,10 @@ namespace Controllers.EnemyController
         public bool HealtDamage(int damage)
         {
             _healt -= damage;
+            Debug.Log(_healt);
             SetHealt(_healt);
             if (_healt < 0)
             {
-                enemyPhysics.SetActive(false);
                 transform.tag = "Dead";
                 botAIController.BotReset();
                 botAnimationController.Dead();
@@ -115,7 +112,7 @@ namespace Controllers.EnemyController
                 {
                     SetHealt(100);
                 });
-                _healt = EnemyData.Healt;
+                _healt = botData.Healt;
                 return true;
             }
 
@@ -124,7 +121,7 @@ namespace Controllers.EnemyController
 
         public void BotReset()
         {
-            _healt = EnemyData.Healt;
+            _healt = botData.Healt;
             botAnimationController.Idle();
             botAIController.BotReset();
         }

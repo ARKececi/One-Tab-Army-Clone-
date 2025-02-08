@@ -4,7 +4,7 @@ using UnityEngine.Serialization;
 namespace Data.ValueObject
 {
     [Serializable]
-    public class EnemyData
+    public class BotData
     {
         public int Healt;
         public int Damage; 
