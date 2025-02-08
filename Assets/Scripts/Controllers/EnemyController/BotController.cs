@@ -33,7 +33,7 @@ namespace Controllers.EnemyController
         [SerializeField] private GameObject moneyBag;
         [SerializeField] private GameObject enemyPhysics;
         [SerializeField] private GameObject healtBar;
-        [SerializeField] private EnemyEnum enemyEnum;
+        [FormerlySerializedAs("botEnum")] [FormerlySerializedAs("enemyEnum")] [SerializeField] private BotType botType;
         [SerializeField] private List<BotManager> _enemyList;
         
         #endregion
@@ -86,7 +86,7 @@ namespace Controllers.EnemyController
 
         private EnemyData GetEnemyData()
         {
-            return Resources.Load<CD_Enemy>("Data/CD_Enemy").EnemyDatas[enemyEnum];
+            return Resources.Load<CD_Bot>("Data/CD_Enemy").EnemyDatas[botType];
         }
 
         public void SetHealt(float healt)
@@ -99,7 +99,7 @@ namespace Controllers.EnemyController
             healtBar.transform.localEulerAngles = new Vector3(0, -transform.eulerAngles.y, 0);
         }
         
-        public void HealtDamage(int damage)
+        public bool HealtDamage(int damage)
         {
             _healt -= damage;
             SetHealt(_healt);
@@ -116,7 +116,10 @@ namespace Controllers.EnemyController
                     SetHealt(100);
                 });
                 _healt = EnemyData.Healt;
+                return true;
             }
+
+            return false;
         }
 
         public void BotReset()
@@ -124,7 +127,6 @@ namespace Controllers.EnemyController
             _healt = EnemyData.Healt;
             botAnimationController.Idle();
             botAIController.BotReset();
-            transform.tag = "Untagged";
         }
 
         private void ExpThrow()
@@ -158,7 +160,12 @@ namespace Controllers.EnemyController
 
             if (timer <= 0)
             {
-                _enemyList[0].OnHitDamage(damage);
+                if (_enemyList[0].OnHitDamage(damage))
+                {
+                    botAIController.RemoveTarget(_enemyList[0].transform);
+                    _enemyList.Remove(_enemyList[0]);
+                    botAIController.NullTarget();
+                }
                 StartTimer(countdownTime);
             }
         }

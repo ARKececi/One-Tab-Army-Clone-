@@ -7,8 +7,7 @@ namespace Data.ValueObject
     public class EnemyData
     {
         public int Healt;
-        public int Damage;
-        [FormerlySerializedAs("NormalSpeed")] public int Speed;
-        public int FastSpeed;
+        public int Damage; 
+        public int Speed;
     }
 }

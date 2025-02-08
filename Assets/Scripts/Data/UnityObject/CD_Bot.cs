@@ -6,8 +6,8 @@ using UnityEngine.Rendering;
 namespace Data.UnityObject
 {
     [CreateAssetMenu(fileName = "CD_Enemy", menuName = "Data/CD_Enemy", order = 0)]
-    public class CD_Enemy : ScriptableObject
+    public class CD_Bot : ScriptableObject
     {
-        public SerializedDictionary<EnemyEnum, EnemyData> EnemyDatas;
+        public SerializedDictionary<BotType, EnemyData> EnemyDatas;
     }
 }

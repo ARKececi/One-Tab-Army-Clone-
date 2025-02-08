@@ -8,6 +8,7 @@ TagManager:
   - Damage
   - Team1
   - Dead
+  - Team2
   layers:
   - Default
   - TransparentFX

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Managers
 {
@@ -7,8 +8,8 @@ namespace Managers
         #region Self Variables
 
         #region Serialized Variables
-
         
+        // [SerializeField] private SerializedDictionary<>
 
         #endregion
 

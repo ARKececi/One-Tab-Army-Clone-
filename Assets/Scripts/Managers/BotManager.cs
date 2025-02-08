@@ -54,14 +54,9 @@ namespace Managers
             botAIController.HitTarget(MouseHit);
         }
 
-        public void OnHitDamage(int damge)
+        public bool OnHitDamage(int damge)
         {
-            if (botController == null)
-            {
-                Debug.Log(damge);
-                return;
-            }
-            botController.HealtDamage(damge);
+            return botController.HealtDamage(damge);
         }
         
     }
