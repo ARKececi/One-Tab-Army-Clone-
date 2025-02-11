@@ -512,8 +512,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 77368613e6a04620ab28faccc4179df5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  TowerManager: {fileID: 0}
   botAIController: {fileID: 3827045792934344340}
   botController: {fileID: 3827045792934344341}
+  _botFlock: {fileID: 0}
+  botType: 1
 --- !u!114 &3827045792934344340
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -529,7 +532,10 @@ MonoBehaviour:
   _agent: {fileID: 3827045792934344338}
   botAnimationController: {fileID: 6794057100328071458}
   _botController: {fileID: 3827045792934344341}
+  _botFlock: {fileID: 0}
+  _botAIPhysics: {fileID: 0}
   targetList: []
+  hit: {fileID: 0}
 --- !u!114 &3827045792934344341
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -551,8 +557,8 @@ MonoBehaviour:
     Speed: 0
   botAIController: {fileID: 3827045792934344340}
   botAnimationController: {fileID: 6794057100328071458}
-  healtBar: {fileID: 0}
-  botType: 4
+  _botManager: {fileID: 0}
+  healtBar: {fileID: 3827045792373172385}
   _enemyList: []
   countdownTime: 3.4
 --- !u!195 &3827045792934344338

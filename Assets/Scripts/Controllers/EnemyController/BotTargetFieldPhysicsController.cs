@@ -1,4 +1,5 @@
 using System;
+using Managers;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -9,8 +10,7 @@ namespace Controllers.EnemyController
         #region Self Variables
 
         #region Serialized Variables
-
-        [FormerlySerializedAs("enemyAnimationController")] [SerializeField] private BotAnimationController botAnimationController;
+        
         [SerializeField] private BotController _botController;
 
         #endregion
@@ -19,17 +19,17 @@ namespace Controllers.EnemyController
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!other.CompareTag(_botController.teamTag) && !other.CompareTag("Untagged"))
+            if (!other.CompareTag(_botController.tag) && !other.CompareTag("Untagged"))
             {
-                botAnimationController.Fight();
+                _botController.Attack();
             }
         }
 
         private void OnTriggerExit(Collider other)
         {
-            if (!other.CompareTag(_botController.teamTag) && !other.CompareTag("Untagged") && other.CompareTag("Dead"))
+            if (!other.CompareTag(_botController.tag) && !other.CompareTag("Untagged"))
             {
-                botAnimationController.Idle();
+                _botController.NotAttack();
             }
         }
     }

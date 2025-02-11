@@ -13,27 +13,25 @@ namespace Controllers.PoolController
         #region Self Variables
 
         #region Public Variables
+
         public SerializedDictionary<BotType, PoolData> PoolData;
-        public SerializedDictionary<BotType, List<BotManager>> PoolChanges;
+        public SerializedDictionary<BotType, PoolChange> PoolChanges;
         #endregion
 
         #region Serialized Variables
         [SerializeField] private GameObject place;
         #endregion
 
-        #region Private Variables
         #endregion
         
-        #endregion
-
         private void Awake()
         {
             PoolData = GetBotData();
-            PoolChanges = new SerializedDictionary<BotType, List<BotManager>>();
+            PoolChanges = new SerializedDictionary<BotType, PoolChange>();
             
             foreach (var botType in PoolData.Keys)
             {
-                PoolChanges.Add(botType, new List<BotManager>());
+                PoolChanges.Add(botType, new PoolChange());
             }
 
             Pooling();
@@ -48,32 +46,42 @@ namespace Controllers.PoolController
         {
             foreach (var botType in PoolData.Keys)
             {
-                    int botCount = PoolData[botType].PoolCount;
-                    for (int i = 0; i < botCount; i++)
-                    {
-                        var botInstance = Instantiate(PoolData[botType].PoolObj, place.transform);
-                        var botManager = botInstance.GetComponent<BotManager>();
-                        if (botManager != null)
-                        {
-                            AddBotToPool(botType, botManager);
-                        }
-                    }
+                int botCount = PoolData[botType].PoolCount;
+                for (int i = 0; i < botCount; i++)
+                {
+                    CreateBotInstance(botType);
+                }
+            }
+        }
+
+        private void CreateBotInstance(BotType botType)
+        {
+            var botInstance = Instantiate(PoolData[botType].PoolObj, place.transform);
+            var botManager = botInstance.GetComponent<BotManager>();
+            if (botManager != null)
+            {
+                AddBotToPool(botType, botManager);
             }
         }
         
         public void AddBotToPool(BotType botType, BotManager botManager)
         {
             botManager.gameObject.SetActive(false);
-            PoolChanges[botType].Add(botManager);
+            PoolChanges[botType].Pool.Add(botManager);
         }
         
         public BotManager GetBotFromPool(BotType botType)
         {
-            if (PoolChanges[botType].Count > 0)
+            if (PoolChanges[botType].Pool.Count == 0)
             {
-                var botManager = PoolChanges[botType][0];
-                PoolChanges[botType].RemoveAt(0);
-                botManager.gameObject.SetActive(true);
+                CreateBotInstance(botType);
+            }
+            
+            if (PoolChanges[botType].Pool.Count > 0)
+            {
+                var botManager = PoolChanges[botType].Pool[0];
+                PoolChanges[botType].Pool.RemoveAt(0);
+                PoolChanges[botType].Use.Add(botManager);
                 return botManager;
             }
             return null;

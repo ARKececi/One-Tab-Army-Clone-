@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Managers;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Serialization;
@@ -12,12 +13,15 @@ namespace Controllers.EnemyController
         #region Self Variables
 
         #region Public Variables
-        public NavMeshAgent _agent;
+        [FormerlySerializedAs("_agent")] public NavMeshAgent Agent;
         #endregion
 
         #region Serialized Variables
-        [FormerlySerializedAs("enemyAnimationController")] [SerializeField] private BotAnimationController botAnimationController;
+        [SerializeField] private BotAnimationController botAnimationController;
         [SerializeField] private BotController _botController;
+        [SerializeField] private BotFlock _botFlock;
+        [SerializeField] private BotAIPhysics _botAIPhysics;
+        [SerializeField] private NavMeshObstacle _obstacle;
         #endregion
 
         #region Private Variables
@@ -27,16 +31,20 @@ namespace Controllers.EnemyController
         private bool isRunning;
         private Transform target;
         private Transform tower;
+        private bool isBotFlock;
+        [SerializeField] private Collider hit;
         #endregion
         
         #endregion
 
         private void Start()
         {
-            _agent.speed = speed;
-            distanceStop = _agent.stoppingDistance;
+            isRunning = true;
+            Agent.speed = speed;
+            distanceStop = Agent.stoppingDistance;
             botAnimationController.Idle();
             target = transform;
+            Agent.avoidancePriority = 50;  // Çarpışma önceliğini orta seviyeye al
         }
 
         public void OnSpeed(int Speed)
@@ -49,76 +57,88 @@ namespace Controllers.EnemyController
             tower = transform;
         }
         
-        public void HitTarget(Transform hitTransform)
+        public void HitTarget(Vector3 hitTransform)
         {
-            if (targetList.Count != 0) return;
-            
-            target = hitTransform;
-            _agent.stoppingDistance = 0;
+            if (targetList.Count != 0 || tower != null) return;
+            hit.transform.position = hitTransform;
+            target = hit.transform;
+            hit.gameObject.SetActive(true);
+            hit.transform.SetParent(transform.parent);
+            Agent.stoppingDistance = 0;
+            _obstacle.enabled = false;
+            Agent.enabled = true;
             StartRunning();
+            Agent.SetDestination(target.position);
         }
 
         public void AddTarget(Transform enemyTarget)
         {
-            _agent.stoppingDistance = distanceStop;
+            Agent.stoppingDistance = .5f;
             targetList.Add(enemyTarget);
+            hit.transform.SetParent(transform);
+            hit.gameObject.SetActive(false);
             target = targetList[0];
+            _obstacle.enabled = false;
+            Agent.enabled = true;
+            Agent.SetDestination(target.position);
         }
 
         public void RemoveTarget(Transform enemyTarget)
         {
             targetList.Remove(enemyTarget);
+            if (targetList.Count == 0)
+            {
+                target = transform;
+                StopRunning();
+            }
+            else
+            {
+                target = targetList[0];
+            }
         }
 
         public void NullTarget()
         {
+            if (targetList.Count != 0 || tower != null) return;
             target = transform;
+            hit.transform.SetParent(transform);
+            hit.gameObject.SetActive(false);
             StopRunning();
         }
 
         private void Update()
         {
-            _agent.destination = target.position;
-
-            if (target != transform)
-            {
-                // Hedefe doğru dönmek için karakterin yönünü ayarla
-                Vector3 direction = (target.position - transform.position).normalized;
-                Quaternion lookRotation = Quaternion.LookRotation(direction);
-                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 10f); // Yavaşça dönme
-            }
             
-            if (_agent.remainingDistance <= distanceStop && targetList.Count != 0)
+            if (Agent.pathPending) return; // Hedef hesaplanıyorsa bekle
+
+            if (!Agent.hasPath || Agent.remainingDistance <= 0.1f && Agent.velocity.magnitude < 0.1f)
             {
-                botAnimationController.Fight();
-                _botController.AtackTimer();
+                if (!isRunning && targetList.Count == 0) return;
+                StopRunning();
+                Agent.enabled = false;
+                _obstacle.enabled = true;
             }
-            else if (tower != null && _agent.remainingDistance <= distanceStop)
-            {
-                botAnimationController.Fight();
-                _botController.AtackTimer();
-            }
-            else if (targetList.Count != 0 || tower != null) StartRunning();
         }
 
         private void StartRunning()
         {
+            isRunning = true;
             botAnimationController.Run();
         }
 
         private void StopRunning()
         {
+            isRunning = false;
             botAnimationController.Idle();
         }
 
         public void BotReset()
         {
             target = transform;
-            botAnimationController.Idle();
+            hit.gameObject.SetActive(false);
             tower = null;
             distanceStop = 0;
             targetList.Clear();
-            NullTarget();
         }
     }
 }

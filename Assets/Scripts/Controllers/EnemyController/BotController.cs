@@ -1,9 +1,13 @@
+using System;
 using System.Collections.Generic;
 using Data.UnityObject;
 using Data.ValueObject;
 using DG.Tweening;
 using Enums;
 using Managers;
+using StateBot;
+using StateBot.IBotControllerStates;
+using StateBot.IBotStates;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Serialization;
@@ -16,11 +20,9 @@ namespace Controllers.EnemyController
         #region Self Variables
 
         #region Public Variables
-
-        public int lwl;
-        public string teamTag;
+        
         public Slider Slider;
-        [FormerlySerializedAs("EnemyData")] public BotData botData;
+        public BotData botData;
 
         #endregion
 
@@ -28,18 +30,25 @@ namespace Controllers.EnemyController
 
         [SerializeField] private BotAIController botAIController;
         [SerializeField] private BotAnimationController botAnimationController;
-        
+        [SerializeField] private BotManager _botManager;
         [SerializeField] private GameObject healtBar;
-        [SerializeField] private BotType botType;
         [SerializeField] private List<BotManager> _enemyList;
+        [SerializeField] private List<SkinnedMeshRenderer> _materials;
         
         #endregion
 
         #region Private Variables
+        
+        private IBotBaseState _currentBaseState;
+        private IdleState _ıdleState;
+        private AttackState _attackState;
+        private DeadState _deadState;
+        private MovetoMouseHitState _movetoMouseHitState;
 
         private List<(GameObject,BotController)> targetList;
-        private int _healt;
-        private int damage;
+        private int _health;
+        private int _damage;
+        private List<(int,int)> lwl;
         
         public float countdownTime = 5f; // Sayaç süresi (saniye)
         private float timer;
@@ -52,15 +61,38 @@ namespace Controllers.EnemyController
 
         private void Awake()
         {
-            botData = GetEnemyData();
-            _healt = botData.Healt;
+
+            
+            _health = botData.Health;
+            _damage = botData.Damage;
+            
             botAIController.OnSpeed(botData.Speed);
-            damage = botData.Damage;
+            lwl = botData.Lwl;
         }
 
         private void Update()
         {
             HealtBarRotation();
+        }
+
+        public void NextLwl()
+        {
+            _health += (_health / (100 / lwl[_botManager.lwl].Item1));
+            _damage += (_damage / (100 / lwl[_botManager.lwl].Item2));
+        }
+
+        public void SetMaterial(Material material)
+        {
+            foreach (var VARIABLE in _materials)
+            {
+                    if (VARIABLE != null)
+                    {
+                        // Materyalin bir kopyasını alıyoruz, böylece orijinal materyali etkilemeyiz
+                        Material mat = new Material(material);
+                        VARIABLE.materials[0].color = mat.color;
+                        // Outline rengi varsa ilk değerini atıyoruz
+                    }
+            }
         }
 
         public void EnemyTower(TowerManager towerManager)
@@ -71,6 +103,7 @@ namespace Controllers.EnemyController
 
         public void AddTarget(BotManager botManager)
         {
+            if (transform.CompareTag("Dead")) return;
             botAIController.AddTarget(botManager.transform);
             _enemyList.Add(botManager);
         }
@@ -81,9 +114,9 @@ namespace Controllers.EnemyController
             botAIController.RemoveTarget(botManager.transform);
         }
 
-        private BotData GetEnemyData()
+        public void GetBotData(BotData Data)
         {
-            return Resources.Load<CD_Bot>("Data/CD_Enemy").EnemyDatas[botType];
+            botData = Data;
         }
 
         public void SetHealt(float healt)
@@ -96,23 +129,18 @@ namespace Controllers.EnemyController
             healtBar.transform.localEulerAngles = new Vector3(0, -transform.eulerAngles.y, 0);
         }
         
-        public bool HealtDamage(int damage)
+        public bool HealtDamage(int damage, string team)
         {
-            _healt -= damage;
-            Debug.Log(_healt);
-            SetHealt(_healt);
-            if (_healt < 0)
+            _health -= damage;
+            SetHealt(_health);
+            if (_health < 0)
             {
                 transform.tag = "Dead";
-                botAIController.BotReset();
                 botAnimationController.Dead();
-                
-                ExpThrow();
                 DOVirtual.DelayedCall(1.30f, () =>
                 {
-                    SetHealt(100);
+                    _botManager.SetPool();
                 });
-                _healt = botData.Healt;
                 return true;
             }
 
@@ -121,14 +149,27 @@ namespace Controllers.EnemyController
 
         public void BotReset()
         {
-            _healt = botData.Healt;
+            _enemyList.Clear();
+            SetHealt(100);
+            NotAttack();
+            _health = botData.Health;
             botAnimationController.Idle();
             botAIController.BotReset();
         }
-
-        private void ExpThrow()
+        public void Attack()
         {
+            if (transform.CompareTag("Dead")) return;
+            botAnimationController.Fight();
+            EnemyTrigger();
+        }
 
+        public void NotAttack()
+        {
+            NotEnemyTrigger();
+            if (_enemyList.Count != 0)
+            {
+                botAnimationController.Run();
+            }
         }
 
         #region AtackTimer
@@ -137,7 +178,12 @@ namespace Controllers.EnemyController
         {
             Enemy = true;
         }
-
+        
+        private void NotEnemyTrigger()
+        {
+            Enemy = false;
+        }
+        
         private void Start()
         {
             StartTimer(countdownTime);
@@ -146,27 +192,34 @@ namespace Controllers.EnemyController
         public void StartTimer(float duration)
         {
             timer = duration;
-            Enemy = false;
+        }
+
+        public void TargetDead(BotManager bot)
+        {
+            if (!_enemyList.Contains(bot)) return;
+            StartTimer(countdownTime);
+            RemoveTarget(bot);
+            botAIController.RemoveTarget(bot.transform);
         }
 
         public void AtackTimer()
         {
-            if (_enemyList.Count == 0) return;
-
+            if (_enemyList.Count == 0 && Enemy == false || transform.CompareTag("Dead")) return;
             timer -= Time.deltaTime;
 
             if (timer <= 0)
             {
-                if (_enemyList[0].OnHitDamage(damage))
-                {
-                    botAIController.RemoveTarget(_enemyList[0].transform);
-                    _enemyList.Remove(_enemyList[0]);
-                    botAIController.NullTarget();
-                }
+                if (_enemyList.Count == 0) return; // 🛑 Burada da kontrol et
+
+                Vector3 direction = (_enemyList[0].transform.position - transform.position).normalized;
+                Quaternion lookRotation = Quaternion.LookRotation(direction);
+                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 10f); // Yavaşça dönme
+                 _enemyList[0].OnHitDamage(_damage,tag);
+                
                 StartTimer(countdownTime);
             }
         }
-
+        
         #endregion
     }
 }

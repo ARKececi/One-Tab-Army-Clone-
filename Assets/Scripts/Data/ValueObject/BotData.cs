@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.Serialization;
 
 namespace Data.ValueObject
@@ -6,8 +7,9 @@ namespace Data.ValueObject
     [Serializable]
     public class BotData
     {
-        public int Healt;
+        [FormerlySerializedAs("Healt")] public int Health;
         public int Damage; 
         public int Speed;
+        public List<(int,int)> Lwl;
     }
 }

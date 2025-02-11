@@ -65,24 +65,11 @@ namespace Managers
             {
                 if (iconPrefab != null)
                 {
-                    iconPrefab.SetActive(true); // İkonu aç
-                    iconPrefab.transform.position = hit.point; // Yeni pozisyona ışınla
                     _ticCollider.transform.position = hit.point;
                     
-                    // DoTween ile konumlandırma ve animasyon
-                    iconPrefab.transform.DOKill();
-                    iconPrefab.transform.localScale = originalScale;
-                    iconPrefab.transform.DOScale(originalScale * scaleAmount, moveDuration / 2)
-                        .SetEase(Ease.OutBack) // Yumuşak büyüme efekti
-                        .OnComplete(() =>
-                        {
-                            iconPrefab.transform.DOScale(Vector3.zero, moveDuration / 2)
-                                .SetEase(Ease.InBack); // Tekrar küçült
-                        });
-
                     // Belirli bir süre sonra kapat
                     Invoke(nameof(HideIcon), activeTime);
-                    EnemySignals.Instance.onHitTarget?.Invoke(iconPrefab.transform);
+                    TowerSignals.Instance.onHitTarget?.Invoke(hit.point);
                 }
             }
         }

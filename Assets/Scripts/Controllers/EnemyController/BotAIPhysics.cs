@@ -14,11 +14,17 @@ namespace Controllers.EnemyController
 
         #endregion
 
+        #region Private Variables
+
+        public string ıd;
+
         #endregion
 
+        #endregion
+        
         private void OnTriggerEnter(Collider other)
         {
-            if (other.CompareTag("Team1"))
+            if (other.name == ıd)
             {
                 botAIController.NullTarget();
             }
